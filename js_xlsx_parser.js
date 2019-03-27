@@ -22,6 +22,7 @@ workbook.SheetNames.forEach(function(y) {
 
         if(!data[row]) data[row]={};
         data[row][headers[col]] = value;
+        data[row]['row'] = row;
     }
     //drop those first two rows which are empty
     data.shift();
@@ -39,18 +40,57 @@ data.forEach(function(entry) {
     var date = new Date(entry.time);
     var dateString = date.toLocaleDateString();
     
-    if (!employee[dateString]) employee[dateString] = {};
-    var dateEntry = employee[dateString];
-
-    if (!dateEntry.totalTime) dateEntry.totalTime = 0;
+    if (!employee[dateString]) employee[dateString] = [];
+    var dateEntries = employee[dateString];
     
-    if (!dateEntry.date) {
-        dateEntry.date = date;
-    } else {
-        dateEntry.totalTime += date - dateEntry.date; 
+    if (entry.Text === 'Vstup do zony' || entry.Text === 'Odchod ze zony') {
+        dateEntries.push(entry);
     }
     
-
 })
 
-console.log(result)
+//sort
+for (const emp in result) {
+    let employee = result[emp];
+    
+    for (const date in employee) {
+        let dateEntries = employee[date];
+        
+        dateEntries.sort(
+            function(entry1, entry2){
+                return entry1.row - entry2.row;
+        });    
+    }    
+}
+
+//reduce
+for (const emp in result) {
+    let employee = result[emp];
+    
+    for (const date in employee) {
+        let dateEntries = employee[date];
+        let totalTime = 0;
+        
+        for (var i = 0; i < dateEntries.length; i += 2) { 
+            var enter = dateEntries[i];
+            var exit = dateEntries[i + 1];
+            
+            if (enter.Text !== 'Vstup do zony') {
+                throw 'not an enter';
+            }
+            if (exit.Text !== 'Odchod ze zony') {
+                throw 'not an exit';
+            }
+            
+            var timeEnter = new Date(enter.time);
+            var timeExit = new Date(exit.time);
+
+            totalTime += timeExit - timeEnter;
+
+        }
+        employee[date] = totalTime / 3600000;
+         
+    }    
+}
+
+console.log(result);
