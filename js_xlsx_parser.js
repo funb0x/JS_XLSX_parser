@@ -38,7 +38,7 @@ data.forEach(function(entry) {
     var employee = result[entry.Name];
 
     var date = new Date(entry.time);
-    var dateString = date.toLocaleDateString();
+    var dateString = date.toISOString().split('T')[0];
     
     if (!employee[dateString]) employee[dateString] = [];
     var dateEntries = employee[dateString];
@@ -70,7 +70,7 @@ for (const emp in result) {
     for (const date in employee) {
         let dateEntries = employee[date];
         let totalTime = 0;
-        
+        let ranges = '';
         for (var i = 0; i < dateEntries.length; i += 2) { 
             var enter = dateEntries[i];
             var exit = dateEntries[i + 1];
@@ -86,11 +86,21 @@ for (const emp in result) {
             var timeExit = new Date(exit.time);
 
             totalTime += timeExit - timeEnter;
-
+            ranges += '<' + timeEnter.getHours() + ':' + (timeEnter.getMinutes() < 10 ? '0' + timeEnter.getMinutes() : timeEnter.getMinutes()) + 
+            ' - ' + timeExit.getHours() + ':' + (timeExit.getMinutes() < 10 ? '0' + timeExit.getMinutes() : timeExit.getMinutes()) + '>'
         }
-        employee[date] = totalTime / 3600000;
+        var officeSpentTime = new Date(totalTime).toISOString().substr(11, 8);
+        employee[date] = officeSpentTime + ' -> ' + ranges;
          
     }    
 }
 
-console.log(result);
+
+//print
+for (const emp in result) {
+    let employee = result[emp];
+    console.log('-------- ' + emp + ' --------');
+    for (const date in employee) {
+        console.log(date + ' -> ' + employee[date]);      
+    }    
+}
